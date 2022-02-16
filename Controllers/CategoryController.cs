@@ -16,7 +16,7 @@ namespace Blog.Controllers
             return Ok(categories);
         }
 
-        [HttpGet("v1/categories/{id: int}")]
+        [HttpGet("v1/categories/{id:int}")]
         public async Task<IActionResult> GetByIdAsync([FromRoute] int id, [FromServices]BlogDataContext context)
         {
             var category = await context.Categories.FirstOrDefaultAsync(x => x.Id == id);
@@ -28,7 +28,7 @@ namespace Blog.Controllers
         }
 
         [HttpPost("v1/categories")]
-        public async Task<IActionResult> PostAsync([FromBody] CreateCategoryViewModel model, [FromServices]BlogDataContext context)
+        public async Task<IActionResult> PostAsync([FromBody] EditorCategoryViewModel model, [FromServices]BlogDataContext context)
         {
             try
             {
@@ -50,8 +50,8 @@ namespace Blog.Controllers
             }
         }
 
-        [HttpPut("v1/categories/{id: int}")]
-        public async Task<IActionResult> PutAsync([FromRoute] int id, [FromBody] Category model, [FromServices]BlogDataContext context)
+        [HttpPut("v1/categories/{id:int}")]
+        public async Task<IActionResult> PutAsync([FromRoute] int id, [FromBody] EditorCategoryViewModel model, [FromServices]BlogDataContext context)
         {
             var category = await context.Categories.FirstOrDefaultAsync(x => x.Id == id);
 
@@ -68,7 +68,7 @@ namespace Blog.Controllers
             return Ok(category);
         }
 
-        [HttpDelete("v1/categories/{id: int}")]
+        [HttpDelete("v1/categories/{id:int}")]
         public async Task<IActionResult> DeleteAsync([FromRoute] int id, [FromServices]BlogDataContext context)
         {
             var category = await context.Categories.FirstOrDefaultAsync(x => x.Id == id);
