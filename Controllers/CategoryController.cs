@@ -1,4 +1,5 @@
 using Blog.Data;
+using Blog.Extensions;
 using Blog.Models;
 using Blog.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -12,8 +13,17 @@ namespace Blog.Controllers
         [HttpGet("v1/categories")]
         public async Task<IActionResult> GetAsync([FromServices]BlogDataContext context)
         {
-            var categories = await context.Categories.ToListAsync();
-            return Ok(categories);
+            try
+            {
+                var categories = await context.Categories.ToListAsync();
+                return Ok(new ResultViewModel<List<Category>>(categories)); 
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(500, new ResultViewModel<List<Category>>("Falha interna no servidor"));
+            }
+
+            
         }
 
         [HttpGet("v1/categories/{id:int}")]
@@ -22,14 +32,17 @@ namespace Blog.Controllers
             var category = await context.Categories.FirstOrDefaultAsync(x => x.Id == id);
 
             if(category == null)
-                return NotFound();
+                return NotFound(new ResultViewModel<List<Category>>("Conteúdo não encontrado"));
             
-            return Ok(category);
+            return Ok(new ResultViewModel<Category>(category));
         }
 
         [HttpPost("v1/categories")]
         public async Task<IActionResult> PostAsync([FromBody] EditorCategoryViewModel model, [FromServices]BlogDataContext context)
         {
+            if(!ModelState.IsValid)
+                return BadRequest(new ResultViewModel<Category>(ModelState.GetErrors()));
+
             try
             {
                 var category = new Category
@@ -42,44 +55,61 @@ namespace Blog.Controllers
                 await context.Categories.AddAsync(category);
                 await context.SaveChangesAsync();
             
-                return Created($"v1/categories/{category.Id}", model);
+                return Created($"v1/categories/{category.Id}", new ResultViewModel<Category>(category));
             } 
             catch(Exception e)
             {
-                return StatusCode(500, "Falha interna no servidor");
+                return StatusCode(500, new ResultViewModel<List<Category>>("Falha interna no servidor"));
             }
         }
 
         [HttpPut("v1/categories/{id:int}")]
         public async Task<IActionResult> PutAsync([FromRoute] int id, [FromBody] EditorCategoryViewModel model, [FromServices]BlogDataContext context)
         {
-            var category = await context.Categories.FirstOrDefaultAsync(x => x.Id == id);
-
-            if(category == null)
-                return NotFound();
+            if(!ModelState.IsValid)
+                    return BadRequest(new ResultViewModel<Category>(ModelState.GetErrors()));
             
-            category.Name = model.Name;
-            category.Slug = model.Slug;
+            try
+            {
+                var category = await context.Categories.FirstOrDefaultAsync(x => x.Id == id);
 
-            context.Categories.Update(category);
+                if(category == null)
+                    return NotFound();
+                
+                category.Name = model.Name;
+                category.Slug = model.Slug;
 
-            await context.SaveChangesAsync();
+                context.Categories.Update(category);
 
-            return Ok(category);
+                await context.SaveChangesAsync();
+
+                return Ok(new ResultViewModel<Category>(category));
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(500, new ResultViewModel<List<Category>>("Falha interna no servidor"));
+            }
         }
 
         [HttpDelete("v1/categories/{id:int}")]
         public async Task<IActionResult> DeleteAsync([FromRoute] int id, [FromServices]BlogDataContext context)
         {
-            var category = await context.Categories.FirstOrDefaultAsync(x => x.Id == id);
+            try
+            {
+                var category = await context.Categories.FirstOrDefaultAsync(x => x.Id == id);
 
-            if(category == null)
-                return NotFound();
+                if(category == null)
+                    return NotFound();
 
-            context.Categories.Remove(category);
-            await context.SaveChangesAsync();
+                context.Categories.Remove(category);
+                await context.SaveChangesAsync();
 
-            return Ok(category);
+                return Ok(category);
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(500, new ResultViewModel<List<Category>>("Falha interna no servidor"));
+            }
         }
     }
 }
